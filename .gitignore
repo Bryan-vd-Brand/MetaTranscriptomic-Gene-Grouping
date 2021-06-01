@@ -1,0 +1,9 @@
+#data storage
+Data/
+resources/
+.snakemake/
+#results
+results/
+Output/
+#nfs
+.nfs*

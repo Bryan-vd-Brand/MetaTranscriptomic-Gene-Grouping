@@ -1,0 +1,32 @@
+# directory containing samples' folders with fastq.gz files.
+# data/ directory by default. Otherwise, you can provide this directory with
+#  --config input_dir=<INPUT_DIR_PATH> when running snakemake
+input_dir:
+  Data
+
+# directory with the sortmerna database
+# REQUIRED
+sortmerna_db_dir:
+  resources/sortmerna_db
+
+sortmerna_db_files:
+  rfam-5.8s-database-id98.fasta: rfam-5.8s-database-id98.fasta
+  rfam-5s-database-id98.fasta: rfam-5s-database-id98.fasta
+  silva-arc-16s-id95.fasta: silva-arc-16s-id95.fasta
+  silva-arc-23s-id98.fasta: silva-arc-23s-id98.fasta
+  silva-bac-16s-id90.fasta: silva-bac-16s-id90.fasta
+  silva-bac-23s-id98.fasta: silva-bac-23s-id98.fasta
+
+# metagenomic shotgun DNA samples to compare with the metatranscriptomic ones
+metagenomic_DNA_samples:
+  SRR12557712: SRR12557712
+  SRR12557713: SRR12557713
+  SRR12557714: SRR12557714
+  SRR12557715: SRR12557715
+
+
+samples:
+  ERR2088987: Data/ERR2088987/ERR2088987.fastq
+  SRR2992971: Data/SRR2992971/SRR2992971_1.fastq,Data/SRR2992971/SRR2992971_2.fastq
+  # - ERR2088987
+  # - SRR2992971
