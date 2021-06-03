@@ -19,26 +19,9 @@ def parse_args():
         required=True,
         help=""
     )
-    requiredArgs.add_argument(
-        "-d",
-        "--input_dna_files",
-        dest = "input_dna_files",
-        nargs="+",
-        required=True,
-        help=""
-    )
-    requiredArgs.add_argument(
-        "-m",
-        "--mock_samples",
-        dest = "mock_samples",
-        nargs="+",
-        required=True,
-        help=""
-    )
-
     return parser.parse_args()
 
-def gather_sortmerna(sortmerna_files, mock_samples):
+def gather_sortmerna(sortmerna_files):
     samples = list()
     percentages = list()
     transcr = list()
@@ -46,43 +29,29 @@ def gather_sortmerna(sortmerna_files, mock_samples):
     for file in sortmerna_files:
         sample = os.path.basename(file).split("_sortmerna")[0]
         samples.append(sample)
-
-        if sample not in mock_samples:
-            transcr.append("yes")
-        else:
-            transcr.append("no")
-
         lines = [line.strip() for line in open(file).readlines()]
         for line in lines:
             if "Total reads passing E-value threshold" in line:
                 percentage = float(line.split("(")[1].split(")")[0])
                 percentages.append(percentage)
 
-    df = pd.DataFrame(list(zip(samples, percentages, transcr)),
-               columns =['samples', 'rRNA percent', 'transcr'])
+    df = pd.DataFrame(list(zip(samples, percentages)),
+               columns =['samples', 'rRNA percent'])
     df = df.sort_values("rRNA percent")
 
-    palette = {"yes": "blue", "no":"red"}
     fig, ax = plt.subplots()
     fig.set_size_inches(11.7, 8.27)
     fig.patch.set_facecolor('white')
-    sns.barplot(x="samples", y="rRNA percent", data=df, hue="transcr",dodge=False, palette=palette)
+    sns.barplot(x="samples", y="rRNA percent", data=df,dodge=False)
     plt.xticks(rotation=60)
-
-    for (type, ticklbl) in zip(df['transcr'], ax.xaxis.get_ticklabels()):
-        ticklbl.set_color('blue' if type == 'yes' else 'red')
-
-    fig.savefig("results/0_sortmerna/rRNA_percentages.png")
-
-    df.to_csv("results/0_sortmerna/rRNA_percentages.txt", sep="\t", index=False)
+    
+    fig.savefig("results/1_sortmerna/rRNA_percentages.png")
+    df.to_csv("results/1_sortmerna/rRNA_percentages.txt", sep="\t", index=False)
 
 def main():
 
     args = parse_args()
-
-    all_files = args.input_files + args.input_dna_files
-
-    gather_sortmerna(all_files, args.mock_samples)
+    gather_sortmerna(args.input_files)
 
 if __name__ == "__main__":
     main()

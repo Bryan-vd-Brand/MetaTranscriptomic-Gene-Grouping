@@ -1,9 +1,19 @@
+import glob
+
 SORTMERNA_DB_FILES = config.get("sortmerna_db_files")
 DATA_DIR = config['input_dir']
 
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
     return config["samples"][wildcards.sample].split(",") # "," split
+
+def get_sortmerna_results():
+    results = []
+    for file in config["samples"]:
+        RunAccession = file.split(":")[0]
+        sortmernaFile = f"results/1_sortmerna/{RunAccession}_sortmerna.txt"
+        results.append(sortmernaFile)
+    return results
 
 ruleorder: run_sortmerna_paired > run_sortmerna_single
 
@@ -41,7 +51,7 @@ rule run_sortmerna_single:
         "--idx-dir resources/sortmerna_db &> {log}; "
         "mv {params.results_log} {output} ; "
         "rm -rf results/1_sortmerna/per_sample/{wildcards.sample}"
-		
+
 rule run_sortmerna_paired:
     input:
         index = rules.index_sortmerna.output,
@@ -58,7 +68,7 @@ rule run_sortmerna_paired:
         "sortmerna "
         "{params.dbfiles} "
         "--reads {input.r1} "
-		"--reads {input.r2} "
+        "--reads {input.r2} "
         "--threads {threads} "
         "--workdir results/1_sortmerna/per_sample/{wildcards.sample} "
         "--idx-dir resources/sortmerna_db &> {log}; "
@@ -67,15 +77,11 @@ rule run_sortmerna_paired:
 
 rule collect_sortmerna_results:
     input:
-        files_single = rules.run_sortmerna_single.output,
-        files_paired = rules.run_sortmerna_paired.output
+        results = get_sortmerna_results()
     output:
         out_figure = report("results/1_sortmerna/rRNA_percentages.png", category="Sortmerna analysis"),
         out_table  = report("results/1_sortmerna/rRNA_percentages.txt", category="Sortmerna analysis"),
     params:
-        script = srcdir("../scripts/gather_sortmerna.py"),
-        input_dir = "results/1_sortmerna",
-        samples = list(config.get("metagenomic_DNA_samples"))
+        script = srcdir("../Scripts/gather_sortmerna.py")
     shell:
-        "python {params.script} -i {input.files_single} -d {input.dna_files} -m {params.samples}  "
-        "python {params.script} -i {input.files_paired} -d {input.dna_files} -m {params.samples}  "
+        "python {params.script} -i {input.results}  "
