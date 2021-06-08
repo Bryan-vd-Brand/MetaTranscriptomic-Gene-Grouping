@@ -51,7 +51,6 @@ def determineGenomes(idxstat_files):
             allResults.append(genome)
         with open('results/2_ReferenceSelection/ReferenceTable.tsv', 'a') as genomeTsv:
             if len(result) > 0:
-                #save to log file
                 genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\t{result}\n")          
             else:
                 print(F"UNEXPECTED: {runAccession} no references passed")
@@ -59,6 +58,9 @@ def determineGenomes(idxstat_files):
     #TODO: #pileup.sh
     uniqueResults = list(set(allResults))
     print(uniqueResults)
+    with open('results/2_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
+        if len(uniqueResults) > 0:
+            referenceList.write(uniqueResults)
 
 def main():
 

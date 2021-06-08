@@ -27,18 +27,19 @@ rule bwa_mem_align_single:
         index = srcdir("../resources/genomes/crAss_genomes.fasta")
     threads: 5
     log:
-        stdout = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stdout",
-        stderr = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stderr"
+        stdout = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stdout",
+        stderr = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stderr"
     shell:
         """
         bwa mem -t 5 {params.index} {input} > {wildcards.sample}.sam ;
         samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
-		samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
+        samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
         samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
         samtools index {wildcards.sample}_mapped_q3.bam ;
         samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
         samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
+        pileup.sh in={wildcards.sample}.sam out=results/2_ReferenceSelection/per_sample/pileup_{wildcards.sample}.txt ;
         """
 
 rule bwa_mem_align_paired:
@@ -51,18 +52,19 @@ rule bwa_mem_align_paired:
         index = srcdir("../resources/genomes/crAss_genomes.fasta")
     threads: 5
     log:
-        stdout = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stdout",
-        stderr = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stderr"
+        stdout = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stdout",
+        stderr = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stderr"
     shell:
         """
         bwa mem -t 5 {params.index} {input.r1} {input.r2} > {wildcards.sample}.sam ;
         samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
-		samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
+        samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
         samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
         samtools index {wildcards.sample}_mapped_q3.bam ;
         samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
         samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
+        pileup.sh in={wildcards.sample}.sam out=results/2_ReferenceSelection/per_sample/pileup_{wildcards.sample}.txt ;
         """
 
 rule select_genomes:
