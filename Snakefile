@@ -26,4 +26,4 @@ rule all:
         "results/0_fastqc/multiqc_report.html",
         "results/1_sortmerna/rRNA_percentages.png",
         "results/1_sortmerna/rRNA_percentages.txt",
-        "results/2_ReferenceSelection/per_sample/{sample}.idxstat"
+        "results/2_ReferenceSelection/ReferenceTable.tsv",

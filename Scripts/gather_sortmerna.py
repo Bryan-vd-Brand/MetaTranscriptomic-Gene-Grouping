@@ -24,7 +24,6 @@ def parse_args():
 def gather_sortmerna(sortmerna_files):
     samples = list()
     percentages = list()
-    transcr = list()
 
     for file in sortmerna_files:
         sample = os.path.basename(file).split("_sortmerna")[0]

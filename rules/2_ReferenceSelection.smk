@@ -7,6 +7,14 @@
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
     return config["samples"][wildcards.sample].split(",") # "," split
+    
+def get_idxstats():
+    results = []
+    for file in config["samples"]:
+        RunAccession = file.split(":")[0]
+        idxstatFile = f"results/2_ReferenceSelection/per_sample/{RunAccession}.idxstat"
+        results.append(idxstatFile)
+    return results
 
 ruleorder: bwa_mem_align_paired > bwa_mem_align_single
 
@@ -23,12 +31,14 @@ rule bwa_mem_align_single:
         stderr = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stderr"
     shell:
         """
-        bwa mem -t 5 {params.index} {input} > {sample}.sam ;
-        samtools view -h -b -S {sample}.sam > {sample}.bam ;
-        samtools view -b -F 4 {sample}.bam > {sample}_mapped.bam ;
-        samtools view -q 3 {sample}_mapped.bam > {sample}_mapped_q3.bam ;
-        samtools index {sample}_mapped_q3.bam ;
-        samtools idxstats {sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{sample}.idxstat ;
+        bwa mem -t 5 {params.index} {input} > {wildcards.sample}.sam ;
+        samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
+		samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
+        samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
+        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
+        samtools index {wildcards.sample}_mapped_q3.bam ;
+        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
+        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
         """
 
 rule bwa_mem_align_paired:
@@ -45,18 +55,22 @@ rule bwa_mem_align_paired:
         stderr = "results/2_ReferenceSelection/{sample}/{sample}_fastqc.stderr"
     shell:
         """
-        bwa mem -t 5 {params.index} {input.r1} {input.r2} > {sample}.sam ;
-        samtools view -h -b -S {sample}.sam > {sample}.bam ;
-        samtools view -b -F 4 {sample}.bam > {sample}_mapped.bam ;
-        samtools view -q 3 {sample}_mapped.bam > {sample}_mapped_q3.bam ;
-        samtools index {sample}_mapped_q3.bam ;
-        samtools idxstats {sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{sample}.idxstat ;
+        bwa mem -t 5 {params.index} {input.r1} {input.r2} > {wildcards.sample}.sam ;
+        samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
+		samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
+        samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
+        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
+        samtools index {wildcards.sample}_mapped_q3.bam ;
+        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
+        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
         """
 
 rule select_genomes:
     input:
-        idxfile = "{sample}.idxstat"
+        idxfiles = get_idxstats()
     output:
-        out_table  = report("results/2_ReferenceSelection/ReferenceTable.txt", category="References"),
+        out_table  = report("results/2_ReferenceSelection/ReferenceTable.tsv", category="References"),
     params:
-        script = TODO GET SCRIPT
+        script = srcdir("../Scripts/gather_references.py")
+    shell:
+        "python {params.script} -i {input.idxfiles} "
