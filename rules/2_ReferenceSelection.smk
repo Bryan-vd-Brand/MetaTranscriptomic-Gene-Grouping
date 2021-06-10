@@ -16,19 +16,52 @@ def get_idxstats():
         results.append(idxstatFile)
     return results
 
+ruleorder: fastp_pe > fastp_se
+
+rule fastp_se:
+    input:
+        sample=[f"{DATA_DIR}/{{sample}}/{{sample}}.fastq.gz"]
+    output:
+        trimmed=f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz",
+        html="results/2_ReferenceSelection/logs/{sample}.html",
+        json="results/2_ReferenceSelection/logs/{sample}.json"
+    log:
+        "results/2_ReferenceSelection/logs_fastp/{sample}.log"
+    params:
+        extra=""
+    threads: 1
+    wrapper:
+        "v0.75.0/bio/fastp"
+
+
+rule fastp_pe:
+    input:
+        sample=[f"{DATA_DIR}/{{sample}}/{{sample}}_1.fastq.gz", f"{DATA_DIR}/{{sample}}/{{sample}}_2.fastq.gz"]
+    output:
+        trimmed=[f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_1.fastq.gz", f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz"],
+        html="results/2_ReferenceSelection/logs/{sample}.html",
+        json="results/2_ReferenceSelection/logs/{sample}.json"
+    log:
+        "results/2_ReferenceSelection/logs_fastp/{sample}.log"
+    params:
+        extra=""
+    threads: 2
+    wrapper:
+        "v0.75.0/bio/fastp"
+
 ruleorder: bwa_mem_align_paired > bwa_mem_align_single
 
 rule bwa_mem_align_single:
     input:
-        f"{DATA_DIR}/{{sample}}/{{sample}}.fastq.gz"
+        f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz"
     output:
         "results/2_ReferenceSelection/per_sample/{sample}.idxstat"
     params:
         index = srcdir("../resources/genomes/crAss_genomes.fasta")
     threads: 5
     log:
-        stdout = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stdout",
-        stderr = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stderr"
+        stdout = "results/2_ReferenceSelection/logs/{sample}_RefSelec.stdout",
+        stderr = "results/2_ReferenceSelection/logs/{sample}_RefSelec.stderr"
     shell:
         """
         bwa mem -t 5 {params.index} {input} > {wildcards.sample}.sam ;
@@ -44,16 +77,16 @@ rule bwa_mem_align_single:
 
 rule bwa_mem_align_paired:
     input:
-        r1 = f"{DATA_DIR}/{{sample}}/{{sample}}_1.fastq.gz",
-        r2 = f"{DATA_DIR}/{{sample}}/{{sample}}_2.fastq.gz"
+        r1 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_1.fastq.gz",
+        r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz"
     output:
         "results/2_ReferenceSelection/per_sample/{sample}.idxstat"
     params:
         index = srcdir("../resources/genomes/crAss_genomes.fasta")
     threads: 5
     log:
-        stdout = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stdout",
-        stderr = "results/2_ReferenceSelection/{sample}/{sample}_RefSelec.stderr"
+        stdout = "results/2_ReferenceSelection/logs/{sample}_RefSelec.stdout",
+        stderr = "results/2_ReferenceSelection/logs/{sample}_RefSelec.stderr"
     shell:
         """
         bwa mem -t 5 {params.index} {input.r1} {input.r2} > {wildcards.sample}.sam ;

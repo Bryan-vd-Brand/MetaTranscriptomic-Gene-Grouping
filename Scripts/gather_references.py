@@ -45,22 +45,22 @@ def determineGenomes(idxstat_files):
             if readCounter > 0.5 * int(numOfUniquelyMappedReads):
                 break
             else:
-                result.append(genomeName)
+                result.append(F"{genomeName}:{ReadCount}")
+                allResults.append(genomeName)
                 readCounter = ReadCount + readCounter
-        for genome in result:
-            allResults.append(genome)
         with open('results/2_ReferenceSelection/ReferenceTable.tsv', 'a') as genomeTsv:
             if len(result) > 0:
                 genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\t{result}\n")          
             else:
                 print(F"UNEXPECTED: {runAccession} no references passed")
                 genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\tFAILED\n")
-    #TODO: #pileup.sh
+    
     uniqueResults = list(set(allResults))
     print(uniqueResults)
     with open('results/2_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
         if len(uniqueResults) > 0:
-            referenceList.write(uniqueResults)
+            for genome in uniqueResults:
+                referenceList.write(F"{genome}\n")
 
 def main():
 
