@@ -4,6 +4,8 @@
 input_dir:
   Data
 
+seperated_genomes_dir:
+  resources/genomes/seperated
 # directory with the sortmerna database
 # REQUIRED
 sortmerna_db_dir:

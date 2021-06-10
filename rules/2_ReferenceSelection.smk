@@ -1,8 +1,7 @@
 #This ruleset contains the 3rd step of the pipeline, selecting crAssPhage genomes for further analysis.
 #This selection is based on the % amount of mapping to the diffferent available genomes
 #Genomes are sorted by # [unique??] hits for the sample, selecting the top genomes until atleast 50% of the mapped reads are represented (N50 like)
-#TODO: Trim adapters
-#TODO: Align fastq against genomes, samtools steps, create best genome list, select best, store best
+
 
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
@@ -73,6 +72,9 @@ rule bwa_mem_align_single:
         samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
         samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
         pileup.sh in={wildcards.sample}.sam out=results/2_ReferenceSelection/per_sample/pileup_{wildcards.sample}.txt ;
+        rm -rf *.bam ;
+        rm -rf *.sam ;
+        rm -rf *.bam.bai ;
         """
 
 rule bwa_mem_align_paired:
@@ -98,6 +100,9 @@ rule bwa_mem_align_paired:
         samtools idxstats {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.idxstat ;
         samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/2_ReferenceSelection/per_sample/{wildcards.sample}.flagstat ;
         pileup.sh in={wildcards.sample}.sam out=results/2_ReferenceSelection/per_sample/pileup_{wildcards.sample}.txt ;
+        rm -rf *.bam ;
+        rm -rf *.sam ;
+        rm -rf *.bam.bai ;
         """
 
 rule select_genomes:
