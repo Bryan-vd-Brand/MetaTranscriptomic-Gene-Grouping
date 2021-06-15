@@ -110,6 +110,7 @@ rule select_genomes:
         idxfiles = get_idxstats()
     output:
         out_table  = report("results/2_ReferenceSelection/ReferenceTable.tsv", category="References"),
+        out_list = report('results/2_ReferenceSelection/ReferenceList.txt', category="References"),
     params:
         script = srcdir("../Scripts/gather_references.py")
     shell:

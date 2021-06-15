@@ -3,6 +3,7 @@ report: "report/workflow.rst"
 include: "rules/0_fastqc.smk"
 include: "rules/1_sortmerna.smk"
 include: "rules/2_ReferenceSelection.smk"
+include: "rules/3_SingleReferenceGeneExpression.smk"
 
 # both methods return the same information. Notice how for the paired end samples,
 # there is only one string containing the two files. Because of that we have to
@@ -27,3 +28,4 @@ rule all:
         "results/1_sortmerna/rRNA_percentages.png",
         "results/1_sortmerna/rRNA_percentages.txt",
         "results/2_ReferenceSelection/ReferenceTable.tsv",
+        "testfile.touch"

@@ -11,13 +11,37 @@ def get_samples(wildcards):
     
 def get_references():
     allReferences = []
-	with open('results/2_ReferenceSelection/ReferenceList.txt', 'r') as referenceList:
-		for line in referenceList
-			allReferences.append(line)
+    with open('results/2_ReferenceSelection/ReferenceList.txt', 'r') as referenceList:
+        for ref in referenceList:
+            allReferences.append(ref.rstrip())
     return allReferences
 
 ruleorder: bwa_mem_OneRef_align_paired > bwa_mem_OneRef_align_single
 
+checkpoint check_referenceList:
+    input:
+          "results/2_ReferenceSelection/ReferenceList.txt"
+    output:
+        touch(".check_ref.touch") #fakeoutput?
+
+class CheckPoint_MakePattern:
+    def __init__(self,pattern):
+        self.pattern = pattern
+
+    def __call__(self, w):
+        global checkpoints
+        checkpoints.check_referenceList.get(**w)
+        references = get_references()
+        pattern = expand(self.pattern, ref = references)
+        print(references)
+        print(pattern)
+        return pattern
+
+rule gather_reference_genomes:
+    input:
+        CheckPoint_MakePattern("resources/genomes/seperated/{ref}.fasta")
+    output:
+        touch("testfile.touch") #testfile
 
 rule bwa_mem_OneRef_align_single:
     input:
