@@ -8,6 +8,14 @@
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
     return config["samples"][wildcards.sample].split(",") # "," split
+	
+def get_idxstats():
+    results = []
+    for file in config["samples"]:
+        RunAccession = file.split(":")[0]
+        idxstatFile = f"results/3_SingleReferenceGeneExpression/per_sample/{RunAccession}.idxstat"
+        results.append(idxstatFile)
+    return results
     
 def get_references():
     allReferences = []
@@ -16,8 +24,6 @@ def get_references():
             allReferences.append(ref.rstrip())
     return allReferences
 
-ruleorder: bwa_mem_OneRef_align_paired > bwa_mem_OneRef_align_single
-
 checkpoint check_referenceList:
     input:
           "results/2_ReferenceSelection/ReferenceList.txt"
@@ -25,75 +31,48 @@ checkpoint check_referenceList:
         touch(".check_ref.touch") #fakeoutput?
 
 class CheckPoint_MakePattern:
-    def __init__(self,pattern):
+    def __init__(self, pattern):
         self.pattern = pattern
 
     def __call__(self, w):
         global checkpoints
         checkpoints.check_referenceList.get(**w)
         references = get_references()
-        pattern = expand(self.pattern, ref = references)
-        print(references)
-        print(pattern)
+        pattern = expand("resources/genomes/seperated/{ref}.fasta", ref = references)
         return pattern
 
-rule gather_reference_genomes:
-    input:
-        CheckPoint_MakePattern("resources/genomes/seperated/{ref}.fasta")
-    output:
-        touch("testfile.touch") #testfile
+ruleorder: run_genomes_paired > run_genomes_single
 
-rule bwa_mem_OneRef_align_single:
+rule run_genomes_single:
     input:
-        f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz"
+        sample = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz",
+        refs = CheckPoint_MakePattern("")
     output:
         "results/3_SingleReferenceGeneExpression/per_sample/{sample}.idxstat"
     params:
-        index = srcdir("../resources/genomes/crAss_genomes.fasta")
-    threads: 5
-    log:
-        stdout = "results/3_SingleReferenceGeneExpression/logs/{sample}_RefSelec.stdout",
-        stderr = "results/3_SingleReferenceGeneExpression/logs/{sample}_RefSelec.stderr"
+        script = srcdir("../Scripts/run_genomes.py")
     shell:
-        """
-        bwa mem -t 5 {params.index} {input} > {wildcards.sample}.sam ;
-        samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
-        samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
-        samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
-        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
-        samtools index {wildcards.sample}_mapped_q3.bam ;
-        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/3_SingleReferenceGeneExpression/per_sample/{wildcards.sample}.idxstat ;
-        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/3_SingleReferenceGeneExpression/per_sample/{wildcards.sample}.flagstat ;
-        pileup.sh in={wildcards.sample}.sam out=results/3_SingleReferenceGeneExpression/per_sample/pileup_{wildcards.sample}.txt ;
-        rm -rf *.bam ;
-        rm -rf *.sam ;
-        rm -rf *.bam.bai ;
-        """
+        "python {params.script} -s {input.sample} -r {input.refs} "
 
-rule bwa_mem_OneRef_align_paired:
+rule run_genomes_paired:
     input:
         r1 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_1.fastq.gz",
-        r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz"
+        r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz",
+        refs = CheckPoint_MakePattern("")
     output:
         "results/3_SingleReferenceGeneExpression/per_sample/{sample}.idxstat"
     params:
-        index = srcdir("../resources/genomes/crAss_genomes.fasta")
-    threads: 5
-    log:
-        stdout = "results/3_SingleReferenceGeneExpression/logs/{sample}_RefSelec.stdout",
-        stderr = "results/3_SingleReferenceGeneExpression/logs/{sample}_RefSelec.stderr"
+        script = srcdir("../Scripts/run_genomes.py")
     shell:
-        """
-        bwa mem -t 5 {params.index} {input.r1} {input.r2} > {wildcards.sample}.sam ;
-        samtools view -O BAM -b {wildcards.sample}.sam > {wildcards.sample}.bam ;
-        samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
-        samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
-        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
-        samtools index {wildcards.sample}_mapped_q3.bam ;
-        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/3_SingleReferenceGeneExpression/per_sample/{wildcards.sample}.idxstat ;
-        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/3_SingleReferenceGeneExpression/per_sample/{wildcards.sample}.flagstat ;
-        pileup.sh in={wildcards.sample}.sam out=results/3_SingleReferenceGeneExpression/per_sample/pileup_{wildcards.sample}.txt ;
-        rm -rf *.bam ;
-        rm -rf *.sam ;
-        rm -rf *.bam.bai ;
-        """
+        "python {params.script} -s [{input.r1},{input.r2}] -r {input.refs} "
+
+rule select_genomes_test:
+    input:
+        idxfiles = get_idxstats()
+    output:
+        out_table  = report("results/3_SingleReferenceGeneExpression/ReferenceTable.tsv", category="References"),
+        out_list = report('results/3_SingleReferenceGeneExpression/ReferenceList.txt', category="References"),
+    params:
+        script = srcdir("../Scripts/gather_references.py")
+    shell:
+        "python {params.script} -i {input.idxfiles} "

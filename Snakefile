@@ -28,4 +28,4 @@ rule all:
         "results/1_sortmerna/rRNA_percentages.png",
         "results/1_sortmerna/rRNA_percentages.txt",
         "results/2_ReferenceSelection/ReferenceTable.tsv",
-        "testfile.touch"
+        "results/3_SingleReferenceGeneExpression/ReferenceTable.tsv"
