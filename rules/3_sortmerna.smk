@@ -1,3 +1,5 @@
+#This rule file runs sortmerna on the provided dataset
+
 import glob
 
 SORTMERNA_DB_FILES = config.get("sortmerna_db_files")
@@ -11,7 +13,7 @@ def get_sortmerna_results():
     results = []
     for file in config["samples"]:
         RunAccession = file.split(":")[0]
-        sortmernaFile = f"results/1_sortmerna/{RunAccession}_sortmerna.txt"
+        sortmernaFile = f"results/3_sortmerna/{RunAccession}_sortmerna.txt"
         results.append(sortmernaFile)
     return results
 
@@ -36,21 +38,21 @@ rule run_sortmerna_single:
         index = rules.index_sortmerna.output,
         fastq = f"{DATA_DIR}/{{sample}}/{{sample}}.fastq.gz"
     output:
-        "results/1_sortmerna/{sample}_sortmerna.txt",
+        "results/3_sortmerna/{sample}_sortmerna.txt",
     params:
         dbfiles =  [f"--ref resources/sortmerna_db/{dbfile}" for dbfile in SORTMERNA_DB_FILES],
-        results_log = "results/1_sortmerna/per_sample/{sample}/out/aligned.log",
+        results_log = "results/3_sortmerna/per_sample/{sample}/out/aligned.log",
     threads: 14
-    log: "results/1_sortmerna/{sample}_sortmerna.log"
+    log: "results/3_sortmerna/{sample}_sortmerna.log"
     shell:
         "sortmerna "
         "{params.dbfiles} "
         "--reads {input.fastq} "
         "--threads {threads} "
-        "--workdir results/1_sortmerna/per_sample/{wildcards.sample} "
+        "--workdir results/3_sortmerna/per_sample/{wildcards.sample} "
         "--idx-dir resources/sortmerna_db &> {log}; "
         "mv {params.results_log} {output} ; "
-        "rm -rf results/1_sortmerna/per_sample/{wildcards.sample}"
+        "rm -rf results/3_sortmerna/per_sample/{wildcards.sample}"
 
 rule run_sortmerna_paired:
     input:
@@ -58,29 +60,29 @@ rule run_sortmerna_paired:
         r1 = f"{DATA_DIR}/{{sample}}/{{sample}}_1.fastq.gz",
         r2 = f"{DATA_DIR}/{{sample}}/{{sample}}_2.fastq.gz"
     output:
-        "results/1_sortmerna/{sample}_sortmerna.txt",
+        "results/3_sortmerna/{sample}_sortmerna.txt",
     params:
         dbfiles =  [f"--ref resources/sortmerna_db/{dbfile}" for dbfile in SORTMERNA_DB_FILES],
-        results_log = "results/1_sortmerna/per_sample/{sample}/out/aligned.log",
+        results_log = "results/3_sortmerna/per_sample/{sample}/out/aligned.log",
     threads: 14
-    log: "results/1_sortmerna/{sample}_sortmerna.log"
+    log: "results/3_sortmerna/{sample}_sortmerna.log"
     shell:
         "sortmerna "
         "{params.dbfiles} "
         "--reads {input.r1} "
         "--reads {input.r2} "
         "--threads {threads} "
-        "--workdir results/1_sortmerna/per_sample/{wildcards.sample} "
+        "--workdir results/3_sortmerna/per_sample/{wildcards.sample} "
         "--idx-dir resources/sortmerna_db &> {log}; "
         "mv {params.results_log} {output} ; "
-        "rm -rf results/1_sortmerna/per_sample/{wildcards.sample}"
+        "rm -rf results/3_sortmerna/per_sample/{wildcards.sample}"
 
 rule collect_sortmerna_results:
     input:
         results = get_sortmerna_results()
     output:
-        out_figure = report("results/1_sortmerna/rRNA_percentages.png", category="Sortmerna analysis"),
-        out_table  = report("results/1_sortmerna/rRNA_percentages.txt", category="Sortmerna analysis"),
+        out_figure = report("results/3_sortmerna/rRNA_percentages.png", category="Sortmerna analysis"),
+        out_table  = report("results/3_sortmerna/rRNA_percentages.txt", category="Sortmerna analysis"),
     params:
         script = srcdir("../Scripts/gather_sortmerna.py")
     shell:

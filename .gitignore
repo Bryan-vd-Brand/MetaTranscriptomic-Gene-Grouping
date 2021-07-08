@@ -7,3 +7,5 @@ results/
 Output/
 #nfs
 .nfs*
+fastp*
+*.touch

@@ -22,13 +22,13 @@ def determineGenomes(idxstat_files):
     #this method takes a idxstat file.
     #compares the result, takes the top couple of references based on some hardcoded rules 
     #Outputs the list of new references
-    allResults = []
+    allResults = {}
     
     for file in idxstat_files:
         result = []
         readCounter = 0
         sample = os.path.basename(file).split(".")[0]
-        flagFile = F"results/2_ReferenceSelection/per_sample/{sample}.flagstat"
+        flagFile = F"results/4_ReferenceSelection/per_sample/{sample}.flagstat"
         flagStatTable = pd.read_table(flagFile, sep='\t', header = None)
         numOfUniquelyMappedReads = flagStatTable[0][4]
         
@@ -39,25 +39,31 @@ def determineGenomes(idxstat_files):
         for index, row in idxStatsTable.iterrows():
             genomeName = row[0]
             ReadCount = row[2]
+            #if the reference has not enough mapped reads skip reference (likely till EOF)
+            if ReadCount < 0.01 * int(numOfUniquelyMappedReads):
+                continue
+            
+            #if we passed 50%, stop loop iteration
             if readCounter > 0.5 * int(numOfUniquelyMappedReads):
                 break
             else:
                 result.append(F"{genomeName}:{ReadCount}")
-                allResults.append(genomeName)
+                
+                if genomeName in allResults.keys():
+                    allResults[genomeName] = allResults[genomeName] + 1
+                else:
+                    allResults[genomeName] = 1
+                
                 readCounter = ReadCount + readCounter
-        with open('results/2_ReferenceSelection/ReferenceTable.tsv', 'a') as genomeTsv:
+        with open('results/4_ReferenceSelection/ReferenceTable.tsv', 'a') as genomeTsv:
             if len(result) > 0:
                 genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\t{result}\n")          
             else:
-                print(F"UNEXPECTED: {runAccession} no references passed")
-                genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\tFAILED\n")
-    
-    uniqueResults = list(set(allResults))
-    print(uniqueResults)
-    with open('results/2_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
-        if len(uniqueResults) > 0:
-            for genome in uniqueResults:
-                referenceList.write(F"{genome}\n")
+                #skip ; genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\tFAILED\n")
+                print(F"Failed to select reference genomes for {sample}")
+    with open('results/4_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
+        for genome in allResults.keys():
+            referenceList.write(F"{genome}\t{allResults[genome]} \n")
 
 def main():
 

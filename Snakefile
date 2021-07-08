@@ -1,9 +1,11 @@
 configfile: "config/config.yaml"
 report: "report/workflow.rst"
 include: "rules/0_fastqc.smk"
-include: "rules/1_sortmerna.smk"
-include: "rules/2_ReferenceSelection.smk"
-include: "rules/3_SingleReferenceGeneExpression.smk"
+include: "rules/1_readTrimming.smk"
+include: "rules/2_fastqc.smk"
+include: "rules/3_sortmerna.smk"
+include: "rules/4_ReferenceSelection.smk"
+include: "rules/5_SingleReferenceGeneExpression.smk"
 
 # both methods return the same information. Notice how for the paired end samples,
 # there is only one string containing the two files. Because of that we have to
@@ -25,7 +27,10 @@ SORTMERNA_DB_FILES = config.get("sortmerna_db_files")
 rule all:
     input:
         "results/0_fastqc/multiqc_report.html",
-        "results/1_sortmerna/rRNA_percentages.png",
-        "results/1_sortmerna/rRNA_percentages.txt",
-        "results/2_ReferenceSelection/ReferenceTable.tsv",
-        "results/3_SingleReferenceGeneExpression/ReferenceTable.tsv"
+        "results/2_fastqc/multiqc_report.html",
+        "results/3_sortmerna/rRNA_percentages.png",
+        "results/3_sortmerna/rRNA_percentages.txt",
+        "results/4_ReferenceSelection/ReferenceTable.tsv",
+        "results/5_SingleReferenceGeneExpression/finished_allsamples.touch"
+        
+

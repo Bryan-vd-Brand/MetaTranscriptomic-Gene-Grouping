@@ -1,3 +1,5 @@
+#This rule file performs fastqc/multiqc on the original data set.
+
 DATA_DIR = config['input_dir']
 
 """
@@ -54,5 +56,5 @@ rule multiqc:
         outdir = "results/0_fastqc"
     shell:
         """
-        multiqc {input} -o {params.outdir}
+        multiqc -f {input} -o {params.outdir}
         """

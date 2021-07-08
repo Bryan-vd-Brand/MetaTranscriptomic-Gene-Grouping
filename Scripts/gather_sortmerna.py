@@ -44,8 +44,8 @@ def gather_sortmerna(sortmerna_files):
     sns.barplot(x="samples", y="rRNA percent", data=df,dodge=False)
     plt.xticks(rotation=60)
     
-    fig.savefig("results/1_sortmerna/rRNA_percentages.png")
-    df.to_csv("results/1_sortmerna/rRNA_percentages.txt", sep="\t", index=False)
+    fig.savefig("results/3_sortmerna/rRNA_percentages.png")
+    df.to_csv("results/3_sortmerna/rRNA_percentages.txt", sep="\t", index=False)
 
 def main():
 
