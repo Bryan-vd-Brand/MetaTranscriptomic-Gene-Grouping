@@ -1,7 +1,4 @@
-#This snakemake file contains the rules associated with 
-#creating the Gene Expression Heatmap for a single reference(genome) across the entire dataset
-
-#TODO: Take all featurecount results aggregate into one expression table
+#This snakemake file contains the rules associated with generating featurecount results for sample-genome combinations
 
 GENE_ANNOTATION_FILE = config.get("gene_annotation_file")
 GENOME_DIR = config['seperated_genomes_dir']

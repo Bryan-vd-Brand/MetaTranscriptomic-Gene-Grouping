@@ -36,13 +36,12 @@ rule index_sortmerna:
 rule run_sortmerna_single:
     input:
         index = rules.index_sortmerna.output,
-        fastq = f"{DATA_DIR}/{{sample}}/{{sample}}.fastq.gz"
+        fastq = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz"
     output:
         "results/3_sortmerna/{sample}_sortmerna.txt",
     params:
         dbfiles =  [f"--ref resources/sortmerna_db/{dbfile}" for dbfile in SORTMERNA_DB_FILES],
         results_log = "results/3_sortmerna/per_sample/{sample}/out/aligned.log",
-    threads: 14
     log: "results/3_sortmerna/{sample}_sortmerna.log"
     shell:
         "sortmerna "
@@ -57,14 +56,13 @@ rule run_sortmerna_single:
 rule run_sortmerna_paired:
     input:
         index = rules.index_sortmerna.output,
-        r1 = f"{DATA_DIR}/{{sample}}/{{sample}}_1.fastq.gz",
-        r2 = f"{DATA_DIR}/{{sample}}/{{sample}}_2.fastq.gz"
+        r1 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_1.fastq.gz",
+        r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz"
     output:
         "results/3_sortmerna/{sample}_sortmerna.txt",
     params:
         dbfiles =  [f"--ref resources/sortmerna_db/{dbfile}" for dbfile in SORTMERNA_DB_FILES],
         results_log = "results/3_sortmerna/per_sample/{sample}/out/aligned.log",
-    threads: 14
     log: "results/3_sortmerna/{sample}_sortmerna.log"
     shell:
         "sortmerna "

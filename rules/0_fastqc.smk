@@ -12,6 +12,13 @@ as an argument. THEY HAVE A SINGLE ARGUMENT (wilcards), you can not add more
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
     return config["samples"][wildcards.sample].split(",") # "," split
+	
+def get_all_samples():
+    results = []
+    for file in config["samples"]:
+        RunAccession = file.split(":")[0]
+        results.append(RunAccession)
+    return results
 
 ruleorder: fastqc_paired > fastqc_single
 
@@ -49,7 +56,7 @@ rule fastqc_paired:
 
 rule multiqc:
     input:
-        expand("results/0_fastqc/{sample}", sample=config.get("samples").keys())
+        expand("results/0_fastqc/{sample}", sample=get_all_samples())
     output:
         "results/0_fastqc/multiqc_report.html"
     params:

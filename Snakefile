@@ -31,6 +31,7 @@ rule all:
         "results/3_sortmerna/rRNA_percentages.png",
         "results/3_sortmerna/rRNA_percentages.txt",
         "results/4_ReferenceSelection/ReferenceTable.tsv",
-        "results/5_SingleReferenceGeneExpression/finished_allsamples.touch"
+        "results/5_SingleReferenceGeneExpression/finished_allsamples.touch",
+        "results/6_GenerateHorizontalCoveragePlot/finished_plotgeneration.touch"
         
 

@@ -9,3 +9,8 @@ Output/
 .nfs*
 fastp*
 *.touch
+*.out
+*.out.sam
+*.out.tab
+*_STARtmp/
+*.png

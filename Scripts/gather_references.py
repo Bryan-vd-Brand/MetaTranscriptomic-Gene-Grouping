@@ -28,7 +28,7 @@ def determineGenomes(idxstat_files):
         result = []
         readCounter = 0
         sample = os.path.basename(file).split(".")[0]
-        flagFile = F"results/4_ReferenceSelection/per_sample/{sample}.flagstat"
+        flagFile = F"results/4_ReferenceSelection/per_sample/{sample}/{sample}.flagstat"
         flagStatTable = pd.read_table(flagFile, sep='\t', header = None)
         numOfUniquelyMappedReads = flagStatTable[0][4]
         
