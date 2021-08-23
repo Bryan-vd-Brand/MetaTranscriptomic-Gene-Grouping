@@ -13,3 +13,4 @@ rule Generate_Horizontal_Coverage_Plot:
         ./results/5_SingleReferenceGeneExpression/per_sample ;
         touch ./results/6_GenerateHorizontalCoveragePlot/finished_plotgeneration.touch ;
         """
+        

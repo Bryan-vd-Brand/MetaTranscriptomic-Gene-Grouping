@@ -9,6 +9,8 @@ def get_samples(wildcards):
     
 def get_references():
     allReferences = []
+    if not Path('./results/4_ReferenceSelection/ReferenceList.txt').exists():
+        return []
     with open('results/4_ReferenceSelection/ReferenceList.txt', 'r') as referenceList:
         for ref in referenceList:
             allReferences.append(ref.rstrip().split('\t')[0])
@@ -40,12 +42,24 @@ class CheckPoint_MakePattern:
 
 ruleorder: run_genomes_paired > run_genomes_single
 
+rule index_genomes:
+    input:
+        refsCount = "results/4_ReferenceSelection/ReferenceList.txt",
+        refs = expand(F"{GENOME_DIR}/{{ref}}.fasta", ref = get_references()),
+    output:
+        "results/5_SingleReferenceGeneExpression/finished_Index.touch"
+    params:
+        script = srcdir("../Scripts/make_topGenome_indexes.py")
+    shell:
+        "python {params.script} -rl {input.refsCount} -g {input.refs} -gd {GENOME_DIR}"
+
 rule run_genomes_single:
     input:
         sample = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz",
         refs = CheckPoint_MakePattern(""),
         refsCount = "results/4_ReferenceSelection/ReferenceList.txt",
-        refsTable = "results/4_ReferenceSelection/ReferenceTable.tsv"
+        refsTable = "results/4_ReferenceSelection/ReferenceTable.tsv",
+        finishedIndex = "results/5_SingleReferenceGeneExpression/finished_Index.touch"
     output:
         "results/5_SingleReferenceGeneExpression/per_sample/finished_{sample}.touch"
     params:
@@ -59,7 +73,8 @@ rule run_genomes_paired:
         r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz",
         refs = CheckPoint_MakePattern(""),
         refsCount = "results/4_ReferenceSelection/ReferenceList.txt",
-        refsTable = "results/4_ReferenceSelection/ReferenceTable.tsv"
+        refsTable = "results/4_ReferenceSelection/ReferenceTable.tsv",
+        finishedIndex = "results/5_SingleReferenceGeneExpression/finished_Index.touch"
     output:
         "results/5_SingleReferenceGeneExpression/per_sample/finished_{sample}.touch"
     params:

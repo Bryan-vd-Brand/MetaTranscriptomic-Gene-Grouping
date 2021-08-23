@@ -9,11 +9,11 @@ def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
     return config["samples"][wildcards.sample].split(",") # "," split
     
-def get_idxstats():
+def get_pileups():
     results = []
     for file in config["samples"]:
         RunAccession = file.split(":")[0]
-        idxstatFile = f"results/4_ReferenceSelection/per_sample/{RunAccession}/{RunAccession}.idxstat"
+        idxstatFile = f"results/4_ReferenceSelection/per_sample/{RunAccession}/pileup_{RunAccession}.txt"
         results.append(idxstatFile)
     return results
 
@@ -36,7 +36,8 @@ rule STAR_align_single:
         fq = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}.fastq.gz",
         indexed = "finished_index.touch"
     output:
-        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat"
+        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat",
+        "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
         STAR --runThreadN 20 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.fq} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
@@ -66,7 +67,8 @@ rule STAR_align_paired:
         r2 = f"{DATA_DIR}/{{sample}}/trimmed_{{sample}}_2.fastq.gz",
         indexed = "finished_index.touch"
     output:
-        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat"
+        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat",
+        "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
         STAR --runThreadN 20 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.r1} {input.r2} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
@@ -92,11 +94,25 @@ rule STAR_align_paired:
 
 rule select_genomes:
     input:
-        idxfiles = get_idxstats()
+        pileups = get_pileups()
     output:
         out_table  = report("results/4_ReferenceSelection/ReferenceTable.tsv", category="References"),
         out_list = report('results/4_ReferenceSelection/ReferenceList.txt', category="References"),
     params:
         script = srcdir("../Scripts/gather_references.py")
     shell:
-        "python {params.script} -i {input.idxfiles} "
+        "python {params.script} -i {input.pileups} "
+        
+rule generate_hcov_heatmap:
+    input:
+        "results/4_ReferenceSelection/ReferenceTable.tsv"
+    params:
+        script = srcdir("../Scripts/generateHcovHeatmap.R")
+    output:
+        "results/4_ReferenceSelection/finished_plotgeneration.touch"
+    shell:
+        """
+        Rscript {params.script} \
+        ./results/4_ReferenceSelection/per_sample ;
+        touch ./results/4_ReferenceSelection/finished_plotgeneration.touch ;
+        """

@@ -18,49 +18,40 @@ def parse_args():
     )
     return parser.parse_args()
 
-def determineGenomes(idxstat_files):
-    #this method takes a idxstat file.
+def determineGenomes(pileup_files):
+    #this method takes a pileup file.
     #compares the result, takes the top couple of references based on some hardcoded rules 
     #Outputs the list of new references
     allResults = {}
     
-    for file in idxstat_files:
+    for file in pileup_files:
         result = []
-        readCounter = 0
-        sample = os.path.basename(file).split(".")[0]
+        sample = os.path.basename(file).split(".")[0].split('_')[1]
         flagFile = F"results/4_ReferenceSelection/per_sample/{sample}/{sample}.flagstat"
         flagStatTable = pd.read_table(flagFile, sep='\t', header = None)
         numOfUniquelyMappedReads = flagStatTable[0][4]
         
-        idxStatsTable = pd.read_table(file, sep='\t', header = None)
-        #Columns do not have names by default; 0 = reference name; 1=sequence length; 2=#mappedreads; 3=#unmappedreads
-        idxStatsTable = idxStatsTable.sort_values(by=[2], ascending=False)
-        #Take the best genomes of the file until atleast 50% of the reads are covered by those genomes
-        for index, row in idxStatsTable.iterrows():
-            genomeName = row[0]
-            ReadCount = row[2]
-            #if the reference has not enough mapped reads skip reference (likely till EOF)
-            if ReadCount < 0.01 * int(numOfUniquelyMappedReads):
+        pileupTable = pd.read_table(file, sep='\t', header = 0)
+        #Take the genomes having atleast 50% Covered_percent for this sample ; hcov Format = 0.3406
+        for row in pileupTable.iterrows():
+            Series = row[1]
+            genomeName = Series.at['#ID']
+            hCov = Series.at['Covered_percent']
+            #if below 50% stop loop, next row
+            if hCov < 50.0:
                 continue
-            
-            #if we passed 50%, stop loop iteration
-            if readCounter > 0.5 * int(numOfUniquelyMappedReads):
-                break
             else:
-                result.append(F"{genomeName}:{ReadCount}")
-                
+                result.append(F"{genomeName}:{hCov}")
+                #count the number of passed samples for a genome
                 if genomeName in allResults.keys():
                     allResults[genomeName] = allResults[genomeName] + 1
                 else:
-                    allResults[genomeName] = 1
-                
-                readCounter = ReadCount + readCounter
+                    allResults[genomeName] = 1               
         with open('results/4_ReferenceSelection/ReferenceTable.tsv', 'a') as genomeTsv:
             if len(result) > 0:
                 genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\t{result}\n")          
             else:
-                #skip ; genomeTsv.write(F"{sample}\t{numOfUniquelyMappedReads}\tFAILED\n")
-                print(F"Failed to select reference genomes for {sample}")
+                print(F"No reference genomes for {sample}")
     with open('results/4_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
         for genome in allResults.keys():
             referenceList.write(F"{genome}\t{allResults[genome]} \n")

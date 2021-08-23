@@ -127,10 +127,10 @@ def main():
     args = parse_args()
     
     references = pd.read_table(args.reference_list[0] , sep='\t', header = None)
-    references = references.sort_values(by=[1], ascending=False)
+    references = references.sort_values(by=[1], ascending=False, ignore_index=True)
     #Set of best 5 references across all samples
     SelectedReferences = []
-    for x in range(4):
+    for x in range(5):
         SelectedReferences.append(references[0][x])
         
     for refName in SelectedReferences:
@@ -140,13 +140,14 @@ def main():
                 newGenomeDirectory = F"{args.genomes_directory[0]}/{refName}"
                 #if the directory does not exist the index for this genome has not been generated before. 
                 if not os.path.isdir(newGenomeDirectory):
-                    os.system(F"mkdir {newGenomeDirectory}")
-                    os.system(F"STAR --runThreadN 5 --runMode genomeGenerate --genomeDir {newGenomeDirectory} --genomeFastaFiles {referenceFile} --genomeSAindexNbases 7")
-    time.sleep(60)
+                    print(f"ERROR genome index not generate for {newGenomeDirectory}")
     #Check for the set of SelectedReferences if they are present in the current sample and if so run it
     referencesTable = pd.read_table(args.reference_table[0], sep = '\t', header = None)
     for refName in SelectedReferences:
-        if refName in referencesTable.loc[referencesTable[0] == F'{args.run_accession[0]}', 2].tolist()[0]: #TODO [0] ??????????
+        #first check if the runAccession is present then check for the genome
+        if args.run_accession[0] not in referencesTable[0].tolist():
+            continue
+        if refName in referencesTable.loc[referencesTable[0] == F'{args.run_accession[0]}', 2].tolist()[0]: 
             print(F"FOUND {refName} for {args.run_accession[0]}")
             #Create Index for selected Reference genome
             for referenceFile in args.genome_files:
