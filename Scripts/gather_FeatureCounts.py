@@ -65,7 +65,7 @@ def Read_Process_One_FeatureCount(ReferenceID, SampleRA, featureCountFile):
     GeneHitColumnName = F"{SampleRA}_mapped.bam"
     
     DataTable = DataTable.sort_values(by=GeneHitColumnName, ascending=False) #sort by gene hits
-    DataTable = DataTable[DataTable[F'{GeneHitColumnName}'] > 1] #subset table, only take rows with atleast 1 hit for gene. (makes table MUCH smaller)
+    DataTable = DataTable[DataTable[F'{GeneHitColumnName}'] > 1] #subset table, only take rows with atleast 1 hit for gene.
     DataTable = DataTable.rename(columns = {F'{GeneHitColumnName}':'GeneHitCount'}) #rename the varying sorted{SampleRA}.bam column name to static GeneHitCount
 
     oneRunDF = pd.DataFrame(columns=["RunAccession","Genome","GeneID","RPKM"])
@@ -93,13 +93,16 @@ def main():
     references = pd.read_table(args.reference_list[0] , sep='\t', header = None)
     references = references.sort_values(by=[1], ascending=False, ignore_index=True)
     #Set of best 5 references across all samples
-    for x in range(5):
-        #references[0][x]
-        for featureCountFile in glob.iglob(F'{args.result_folder[0]}*/*_featurecount'):
-            basename = os.path.basename(featureCountFile)
-            split = basename.split('_')
-            Sample = split[len(split)-2]
-            Read_Process_One_FeatureCount(references[0][x], Sample, featureCountFile)
+
+    for featureCountFile in glob.iglob(F'{args.result_folder[0]}*/*_featurecount.summary'):
+        featureCountTable = featureCountFile.rsplit('.',1)[0]
+        basename = os.path.basename(featureCountTable)
+        split = basename.split('_')
+        Sample = split[len(split)-2]
+        for x in range(5):
+            if references[0][x] not in featureCountTable: #If the reference is not correct one for this specific globbed file, skip to the next one
+                continue
+            Read_Process_One_FeatureCount(references[0][x], Sample, featureCountTable)
     
     print(ResultDataFrame)
     ResultFile = "FeatureCount_table.tsv"

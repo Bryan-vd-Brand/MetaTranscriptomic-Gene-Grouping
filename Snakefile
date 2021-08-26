@@ -8,6 +8,7 @@ include: "rules/4_ReferenceSelection.smk"
 include: "rules/5_SingleReferenceGeneExpression.smk"
 include: "rules/6_GenerateHorizontalCoveragePlot.smk"
 include: "rules/7_FeatureCounts.smk"
+include: "rules/8_ICA.smk"
 
 # both methods return the same information. Notice how for the paired end samples,
 # there is only one string containing the two files. Because of that we have to
@@ -35,6 +36,6 @@ rule all:
         "results/4_ReferenceSelection/ReferenceTable.tsv",
         "results/5_SingleReferenceGeneExpression/finished_allsamples.touch",
         "results/6_GenerateHorizontalCoveragePlot/finished_plotgeneration.touch",
-        "results/7_FeatureCounts/finished_plotgeneration.touch"
-        
-
+        "results/7_FeatureCounts/finished_plotgeneration.touch",
+        "results/8_ICA/generate_distribution_graph.touch",
+        "results/8_ICA/finished_ICA.touch"
