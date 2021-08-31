@@ -1,6 +1,6 @@
 #This ruleset contains the 3rd step of the pipeline, selecting crAssPhage genomes for further analysis.
 #This selection is based on the % amount of mapping to the different available genomes
-#Genomes are sorted by # [unique??] hits for the sample, selecting the top genomes until atleast 50% of the mapped reads are represented (N50 like)
+
 
 GENOMES_DIR = config['genomes_dir']
 COMBINED_REFERENCE_FILE = config['combined_reference_file']

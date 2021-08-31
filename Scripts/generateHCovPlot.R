@@ -20,8 +20,12 @@ for (pileUpFile in listOfPileUpFiles){
 }
 
 hcovPlot <- ggplot(PileUpDF, aes(x=Hcov, color = Genome)) +
-  geom_histogram(fill="white", alpha = 0.5, position="identity", binwidth=0.5)
+  geom_histogram(fill="white", alpha = 0.5, position="identity", binwidth=5)
 ggsave("HcovHistogram.png", plot = hcovPlot)
+
+hcovPlot_Density <- ggplot(PileUpDF, aes(x=Hcov, color = Genome)) +
+  geom_density() + xlab(label="Density Plot of Hcov %")
+ggsave("HcovDensity.png", plot = hcovPlot_Density)
 
 stdDevPlot <- ggplot(PileUpDF, aes(x=stdDev, color = Genome)) +
   geom_histogram(fill="white", alpha = 0.5, position="identity", binwidth=0.5)

@@ -1,6 +1,7 @@
 #This snakemake rule file contains rules associated with starting the Independent Component Analysis from the expression counts of all the genes. 
 
 VARIANCE = config['pca_variance_required']
+A_ANNOT = config['additional_annotation_file']
 
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
@@ -31,4 +32,17 @@ rule Run_ICA:
         """
         python {params.script} -ft {input} -PCAvar {VARIANCE} ;
         touch ./results/8_ICA/finished_ICA.touch ;
+        """
+
+rule generate_gene_modules:
+    input:
+	    "results/8_ICA/finished_ICA.touch"
+    params:
+        script = srcdir("../Scripts/generateGeneModules.py")
+    output:
+        "results/8_ICA/generated_GeneModules.touch"
+    shell:
+        """
+        python {params.script} -rf ./results/8_ICA -gaf {A_ANNOT} ;
+        touch ./results/8_ICA/generated_GeneModules.touch ;
         """

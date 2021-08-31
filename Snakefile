@@ -34,8 +34,10 @@ rule all:
         "results/3_sortmerna/rRNA_percentages.png",
         "results/3_sortmerna/rRNA_percentages.txt",
         "results/4_ReferenceSelection/ReferenceTable.tsv",
+        "results/4_ReferenceSelection/finished_plotgeneration.touch",
         "results/5_SingleReferenceGeneExpression/finished_allsamples.touch",
         "results/6_GenerateHorizontalCoveragePlot/finished_plotgeneration.touch",
         "results/7_FeatureCounts/finished_plotgeneration.touch",
         "results/8_ICA/generate_distribution_graph.touch",
-        "results/8_ICA/finished_ICA.touch"
+        "results/8_ICA/finished_ICA.touch",
+        "results/8_ICA/generated_GeneModules.touch"
