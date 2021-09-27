@@ -11,13 +11,13 @@ def get_samples(wildcards):
 	
 rule Generate_FeatureCount_Tables:
     input:
-        "results/5_SingleReferenceGeneExpression/finished_allsamples.touch"
+        "results/4_ReferenceSelection/ReferenceList.txt"
     params:
         script = srcdir("../Scripts/gather_FeatureCounts.py")
     output:
         "FeatureCount_table.tsv"
     shell:
-        "python {params.script} -rf results/5_SingleReferenceGeneExpression/per_sample/ -rl results/4_ReferenceSelection/ReferenceList.txt"
+        "python {params.script} -rf results/4_ReferenceSelection/per_sample/ -rl results/4_ReferenceSelection/ReferenceList.txt"
 
 rule Generate_Heatmap:
     input:

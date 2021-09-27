@@ -1,5 +1,5 @@
 #This snakemake file contains the rules associated with generating featurecount results for sample-genome combinations
-
+#DELETED_FILE
 GENE_ANNOTATION_FILE = config.get("gene_annotation_file")
 GENOME_DIR = config['seperated_genomes_dir']
 

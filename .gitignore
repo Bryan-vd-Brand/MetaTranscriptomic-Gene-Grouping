@@ -15,4 +15,6 @@ fastp*
 *_STARtmp/
 *.png
 *.tsv
+*.bam
+*.bam.bai
 

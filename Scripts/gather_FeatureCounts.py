@@ -29,81 +29,43 @@ def parse_args():
     return parser.parse_args()
 
 
-ResultDataFrame = pd.DataFrame(columns=["RunAccession","Genome","GeneID","RPKM"])
-
-def Read_Process_One_FeatureCount(ReferenceID, SampleRA, featureCountFile):
-    SummaryFile = F"{featureCountFile}.summary"
-    PileUpFile = F"{os.path.dirname(featureCountFile)}/pileup_{ReferenceID}_{SampleRA}.txt"
-    NumCrAssPhageReads = -1
-    DataTable = None
-    HorizontalCoverage = 0
-    
-    print(PileUpFile)
-    if os.path.exists(PileUpFile):
-        pileupTable =  pd.read_table(PileUpFile, sep='\t', header = 0)
-        HorizontalCoverage = pileupTable.at[0,'Covered_percent']
-        
-    if(HorizontalCoverage < 50.0):
-        print(f"Hcov below 50 for {SampleRA} {ReferenceID} skipping ; {HorizontalCoverage}")
-        return
-
-    if os.path.exists(SummaryFile):
-        with open(SummaryFile, 'r') as summFile:
-            summFile.readline() # status line
-            NumCrAssPhageReads = int(summFile.readline().split('\t')[1].rstrip("\n")) #Total Assigned Read Count
-    else:
-        print(F"ERROR: missing summary file for {SampleRA}; skipping!")
-        return
-    
-    if os.path.exists(featureCountFile):
-        DataTable = pd.read_table(featureCountFile, sep='\t', header = 1)
-    else:
-        print(F"ERROR: missing data file for {SampleRA}; skipping!")
-        return
-        
-    #Example Columns for featureCountFile/Table = Geneid	Chr	Start	End	Strand	Length	ERR1356705_mapped.bam   
-    GeneHitColumnName = F"{SampleRA}_mapped.bam"
-    
-    DataTable = DataTable.sort_values(by=GeneHitColumnName, ascending=False) #sort by gene hits
-    DataTable = DataTable[DataTable[F'{GeneHitColumnName}'] > 1] #subset table, only take rows with atleast 1 hit for gene.
-    DataTable = DataTable.rename(columns = {F'{GeneHitColumnName}':'GeneHitCount'}) #rename the varying sorted{SampleRA}.bam column name to static GeneHitCount
-
-    oneRunDF = pd.DataFrame(columns=["RunAccession","Genome","GeneID","RPKM"])
-
-    for row in DataTable.itertuples(index=False):
-        GeneID = F"{row.Geneid.split('_')[0]}_{row.Geneid.split('_')[1]}"
-        GeneLength = row.Length
-        GeneHitCount = row.GeneHitCount
-        RPKM = ((GeneHitCount/(NumCrAssPhageReads / 1000000))/GeneLength)
-        dataDict = {'RunAccession':[SampleRA],'Genome':[ReferenceID],'GeneID':[GeneID],'RPKM':[RPKM]}
-        toAppendDF = pd.DataFrame(data=dataDict)
-        oneRunDF = oneRunDF.append(toAppendDF, ignore_index = True)
-        
-        
-    #oneRunDF now contains a dataframe with the first column a run accession and the other columns having GeneID numbers as header and RPKM counts as row value (1row) 
-    global ResultDataFrame
-    ResultDataFrame = ResultDataFrame.append(oneRunDF, ignore_index = True) 
 
 def main():
-    #Runs over all per_sample/[Sample]/[Reference]_[Sample]_featurecount files and calculates the rpkm value and creates a table 
+    #Runs over all per_sample/[Sample]/[Sample]_RPKM.tsv files and grabs the rows for which genomes were selected ; combines to one file
     args = parse_args()
-    print(F'{args.result_folder[0]}*/*_featurecount')
-    
-    
-    references = pd.read_table(args.reference_list[0] , sep='\t', header = None)
-    references = references.sort_values(by=[1], ascending=False, ignore_index=True)
+    ResultDataFrame = pd.DataFrame(columns=["RunAccession","Genome","GeneID","RPKM"])
+    references = pd.read_table(args.reference_list[0] , sep='\t', header = 0)
+    references = references.sort_values(by=['SampleCount'], ascending=False, ignore_index=True)
     #Set of best 5 references across all samples
 
-    for featureCountFile in glob.iglob(F'{args.result_folder[0]}*/*_featurecount.summary'):
-        featureCountTable = featureCountFile.rsplit('.',1)[0]
-        basename = os.path.basename(featureCountTable)
-        split = basename.split('_')
-        Sample = split[len(split)-2]
-        for x in range(5):
-            if references[0][x] not in featureCountTable: #If the reference is not correct one for this specific globbed file, skip to the next one
+    for rpkmFile in glob.iglob(F'{args.result_folder[0]}*/*_RPKM.tsv'):
+        basename = os.path.basename(rpkmFile)
+        Sample = basename.split('_')[0]
+        rpkmDF = pd.read_table(rpkmFile, sep='\t', header = 0)
+        for x in range(0,5):
+            ReferenceGenome = references['Genome'][x]
+            #for each reference genome look in the pileupfile if the hcov is good enough
+            
+            PileUpFile = F"{os.path.dirname(rpkmFile)}/pileup_{Sample}.txt"
+            HorizontalCoverage = 0
+            if os.path.exists(PileUpFile):
+                pileupTable =  pd.read_table(PileUpFile, sep='\t', header = 0)
+                pileupRow = pileupTable[pileupTable['#ID'] == ReferenceGenome]
+                if len(pileupRow) > 1:
+                    print("Error pileupRow not 1 row")
+                HorizontalCoverage = pileupRow['Covered_percent'].iloc[0]
+        
+            if(HorizontalCoverage < 50.0):
+                #print(f"Hcov below 50 for {Sample} {ReferenceGenome} skipping ; {HorizontalCoverage}")
                 continue
-            Read_Process_One_FeatureCount(references[0][x], Sample, featureCountTable)
-    
+            #If so, take from the rpkmFile all entries with that genome and store them in the global output
+            rpkmSubset = rpkmDF[rpkmDF['Genome'] == ReferenceGenome]
+            #Because later pivot and no discernable benefit of CNV's condense
+            condense_functions = {'RunAccession':'first','Genome':'first','GeneID':'first','RPKM':'sum'}
+            rpkmSubset = rpkmSubset.groupby(rpkmSubset['GeneID']).aggregate(condense_functions)
+            rpkmSubset
+            ResultDataFrame = ResultDataFrame.append(rpkmSubset, ignore_index = True) 
+            
     print(ResultDataFrame)
     ResultFile = "FeatureCount_table.tsv"
     ResultDataFrame.to_csv(ResultFile, sep='\t', index = False)

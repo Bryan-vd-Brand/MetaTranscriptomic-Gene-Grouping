@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import argparse
 from sklearn.decomposition import FastICA,PCA
+from sklearn import preprocessing
 import numpy as np
 
 def parse_args():
@@ -31,42 +32,34 @@ def parse_args():
 
 
 def main():
-    #Generates an ICA run for each genome and all genomes inside the featureCountFile
+    #Generates an ICA run for all genomes at the same time
     args = parse_args()
     PCA_variance = float(args.PCA_Variance[0])
     
     expressionDF = pd.read_table(args.FeatureCount_table[0] , sep='\t', header = 0)
     #split the long format into several dataframes each with its own Genome
-    exprDFs = [pd.DataFrame(y) for x,y in expressionDF.groupby('Genome', as_index=False)]
+    expressionDF.pivot(index="RunAccession", columns="GeneID", values="RPKM").fillna(0)
+    #rename to X for consistency with ICA paper
+    X = wideDF
+    #scale using MinMaxScaler, not centered since many values are NA/0/Sparse
+    min_max_scaler = preprocessing.MinMaxScaler()
+    X_scaled = min_max_scaler.fit_transform(X)
+    #Use PCA to reduce the dimensions of the ICA algorithm
+    pca = PCA().fit(X_scaled)
+    #explained_variance_ Equal to n_components largest eigenvalues of the covariance matrix of X ; ndarray      
+    cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
+    number_of_components = np.where(cumulative_variance > PCA_variance)[0][0] + 1 #0-based -> 1-based
+    print(cumulative_variance)
+    print(number_of_components)
     
-    for exprDF in exprDFs:
-        Genome = exprDF['Genome'].iloc[0]
-        #run for each genome
-        wideDF = exprDF.pivot(index="RunAccession", columns="GeneID", values="RPKM").fillna(0) #This is the data for the X matrix in ICA
-        #Now the data needs to be centered, i.e substract the mean for each variable (gene) from the value. 
-        #because we have many genes with NA value the mean is calculated with counting NA entries as 0.
-        for column in wideDF.columns:
-            mean = wideDF[F"{column}"].mean()
-            wideDF[F"{column}"] = wideDF[F"{column}"].apply(lambda x : x - mean)
-        print(Genome)
-        #rename to X for consistency with ICA paper
-        X = wideDF
-        #Use PCA to reduce the dimensions of the ICA algorithm
-        pca = PCA().fit(X)
-        #explained_variance_ Equal to n_components largest eigenvalues of the covariance matrix of X ; ndarray      
-        cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
-        number_of_components = np.where(cumulative_variance > PCA_variance)[0][0] + 1
-        print(cumulative_variance)
-        print(number_of_components)
-        
-        #Run ICA
-        X_test = X.transpose()
-        ica = FastICA(whiten=True,max_iter=1000,tol=1e-6,n_components = number_of_components)
-        S = pd.DataFrame(ica.fit_transform(X_test),index=X_test.index)
-        A = pd.DataFrame(ica.mixing_,index=X_test.columns)
-        #save S&A 
-        S.to_csv(F"results/8_ICA/{Genome}_S.tsv", sep = '\t')
-        A.to_csv(F"results/8_ICA/{Genome}_A.tsv", sep = '\t')
+    #Run ICA
+    X_t = X_scaled.transpose()
+    ica = FastICA(whiten=True,max_iter=1000,tol=1e-6,n_components = number_of_components)
+    S = pd.DataFrame(ica.fit_transform(X_t),index=X_t.index)
+    A = pd.DataFrame(ica.mixing_,index=X_t.columns)
+    #save S&A 
+    S.to_csv(F"results/8_ICA/{Genome}_S.tsv", sep = '\t')
+    A.to_csv(F"results/8_ICA/{Genome}_A.tsv", sep = '\t')
 
     
 

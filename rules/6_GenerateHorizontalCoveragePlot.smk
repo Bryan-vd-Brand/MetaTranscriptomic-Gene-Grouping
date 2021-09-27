@@ -2,7 +2,8 @@
 
 rule Generate_Horizontal_Coverage_Plot:
     input:
-        "results/5_SingleReferenceGeneExpression/finished_allsamples.touch"
+        finished = "results/4_ReferenceSelection/finished_plotgeneration.touch",
+        ReferenceList = "results/4_ReferenceSelection/ReferenceList.txt"
     params:
         script = srcdir("../Scripts/generateHCovPlot.R")
     output:
@@ -10,7 +11,8 @@ rule Generate_Horizontal_Coverage_Plot:
     shell:
         """
         Rscript {params.script} \
-        ./results/5_SingleReferenceGeneExpression/per_sample ;
+        ./results/4_ReferenceSelection/per_sample \
+        {input.ReferenceList} ;
         touch ./results/6_GenerateHorizontalCoveragePlot/finished_plotgeneration.touch ;
         """
         

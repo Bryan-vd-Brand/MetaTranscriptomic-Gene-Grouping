@@ -61,7 +61,10 @@ def main():
                 GeneID = sDF.loc[gene,'GeneID']
                 AnnotationRow = Additional_Annotation_File.loc[Additional_Annotation_File['GeneID'] == GeneID]
                 Annotation = AnnotationRow["Annotation"].to_string(index=False)
-                dataDict = {'Genome':[os.path.basename(S_MatrixFile)],'Component':[component],'GeneID':[GeneID],'Annotation':[Annotation]}
+                Start = AnnotationRow["Start"].to_string(index=False)
+                End = AnnotationRow["End"].to_string(index=False)
+                Strand = AnnotationRow["Strand"].to_string(index=False)
+                dataDict = {'Genome':[os.path.basename(S_MatrixFile)],'Component':[component],'GeneID':[GeneID],'Start':[Start],'End':[End],'Strand':[Strand],'Annotation':[Annotation]}
                 toAppendDF = pd.DataFrame(data=dataDict)
                 resultDF = resultDF.append(toAppendDF, ignore_index = True)
                 

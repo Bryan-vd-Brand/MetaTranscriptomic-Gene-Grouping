@@ -36,13 +36,41 @@ rule Run_ICA:
 
 rule generate_gene_modules:
     input:
-	    "results/8_ICA/finished_ICA.touch"
+      "results/8_ICA/finished_ICA.touch"
     params:
         script = srcdir("../Scripts/generateGeneModules.py")
     output:
-        "results/8_ICA/generated_GeneModules.touch"
+        "results/8_ICA/GeneModules.tsv"
     shell:
         """
-        python {params.script} -rf ./results/8_ICA -gaf {A_ANNOT} ;
-        touch ./results/8_ICA/generated_GeneModules.touch ;
+        python {params.script} -rf ./results/8_ICA -gaf {A_ANNOT}
+        """
+        
+rule many_ICA:    
+    input:
+        "FeatureCount_table.tsv"
+    params:
+        script = srcdir("../Scripts/1000_runICA.py")
+    output:
+        "results/8_ICA/finished_1000Run_ICA.touch"
+    shell:
+        """
+        python {params.script} -ft {input} -PCAvar {VARIANCE} -gaf {A_ANNOT} ;
+        touch ./results/8_ICA/finished_1000Run_ICA.touch ;
+        """
+        
+rule visualize_gene_modules:
+    input:
+        GeneModules = "results/8_ICA/GeneModules.tsv",
+        FC_Table = "FeatureCount_table.tsv"
+    params:
+        script = srcdir("../Scripts/visualize_gene_modules.R")
+    output:
+        "results/8_ICA/visualize_gene_modules.touch"
+    shell:
+        """
+        Rscript {params.script} \
+        {input.FC_Table} \
+        {input.GeneModules} ;
+        touch ./results/8_ICA/visualize_gene_modules.touch ;
         """

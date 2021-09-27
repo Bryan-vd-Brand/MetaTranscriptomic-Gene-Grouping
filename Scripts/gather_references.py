@@ -53,8 +53,9 @@ def determineGenomes(pileup_files):
             else:
                 print(F"No reference genomes for {sample}")
     with open('results/4_ReferenceSelection/ReferenceList.txt', 'w') as referenceList:
+        referenceList.write(F"Genome\tSampleCount\n")
         for genome in allResults.keys():
-            referenceList.write(F"{genome}\t{allResults[genome]} \n")
+            referenceList.write(F"{genome}\t{allResults[genome]}\n")
 
 def main():
 
