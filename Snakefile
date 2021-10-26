@@ -39,5 +39,4 @@ rule all:
         "results/7_FeatureCounts/finished_plotgeneration.touch",
         "results/8_ICA/generate_distribution_graph.touch",
         "results/8_ICA/finished_ICA.touch",
-        "results/8_ICA/visualize_gene_modules.touch",
-        "results/8_ICA/finished_1000Run_ICA.touch"
+        "results/8_ICA/visualize_gene_modules.touch"

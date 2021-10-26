@@ -39,7 +39,6 @@ rule STAR_align_single:
     params:
         script = srcdir("../Scripts/generate_FeatureCount.py")
     output:
-        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat",
         "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
@@ -48,10 +47,6 @@ rule STAR_align_single:
         samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
         samtools index {wildcards.sample}_mapped.bam ;
-        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
-        samtools index {wildcards.sample}_mapped_q3.bam ;
-        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/4_ReferenceSelection/per_sample/{wildcards.sample}/{wildcards.sample}.idxstat ;
-        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/4_ReferenceSelection/per_sample/{wildcards.sample}/{wildcards.sample}.flagstat ;
         pileup.sh overwrite=true in={wildcards.sample}Aligned.out.sam out=results/4_ReferenceSelection/per_sample/{wildcards.sample}/pileup_{wildcards.sample}.txt ;
         python {params.script} -ra {wildcards.sample} -s {input.fq} -a {GENE_ANNOTATION_FILE} ; 
         rm -rf {wildcards.sample}.bam ;
@@ -74,7 +69,6 @@ rule STAR_align_paired:
     params:
         script = srcdir("../Scripts/generate_FeatureCount.py")
     output:
-        "results/4_ReferenceSelection/per_sample/{sample}/{sample}.idxstat",
         "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
@@ -83,18 +77,12 @@ rule STAR_align_paired:
         samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
         samtools index {wildcards.sample}_mapped.bam ;
-        samtools view -O BAM -q 3 {wildcards.sample}_mapped.bam > {wildcards.sample}_mapped_q3.bam ;
-        samtools index {wildcards.sample}_mapped_q3.bam ;
-        samtools idxstats {wildcards.sample}_mapped_q3.bam > results/4_ReferenceSelection/per_sample/{wildcards.sample}/{wildcards.sample}.idxstat ;
-        samtools flagstat -O tsv {wildcards.sample}_mapped_q3.bam > results/4_ReferenceSelection/per_sample/{wildcards.sample}/{wildcards.sample}.flagstat ;
         pileup.sh overwrite=true in={wildcards.sample}Aligned.out.sam out=results/4_ReferenceSelection/per_sample/{wildcards.sample}/pileup_{wildcards.sample}.txt ;
         python {params.script} -ra {wildcards.sample} -s {input.r1} {input.r2} -a {GENE_ANNOTATION_FILE} ;
         rm -rf {wildcards.sample}.bam ;
         rm -rf {wildcards.sample}_mapped.bam ;
         rm -rf {wildcards.sample}_mapped.bam.bai ;
         rm -rf sorted_{wildcards.sample}.bam ;
-        rm -rf {wildcards.sample}_mapped_q3.bam ;
-        rm -rf {wildcards.sample}_mapped_q3.bam.bai ;
         rm -rf {wildcards.sample}Aligned.out.sam ;
         rm -rf {wildcards.sample}.bam.bai ;
         rm -df {wildcards.sample}_STARtmp ;

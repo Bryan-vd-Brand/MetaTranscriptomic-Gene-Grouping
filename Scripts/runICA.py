@@ -38,9 +38,8 @@ def main():
     
     expressionDF = pd.read_table(args.FeatureCount_table[0] , sep='\t', header = 0)
     #split the long format into several dataframes each with its own Genome
-    expressionDF.pivot(index="RunAccession", columns="GeneID", values="RPKM").fillna(0)
     #rename to X for consistency with ICA paper
-    X = wideDF
+    X = expressionDF.pivot(index=["RunAccession","Genome"], columns="GeneID", values="RPKM").fillna(0)
     #scale using MinMaxScaler, not centered since many values are NA/0/Sparse
     min_max_scaler = preprocessing.MinMaxScaler()
     X_scaled = min_max_scaler.fit_transform(X)
@@ -55,11 +54,11 @@ def main():
     #Run ICA
     X_t = X_scaled.transpose()
     ica = FastICA(whiten=True,max_iter=1000,tol=1e-6,n_components = number_of_components)
-    S = pd.DataFrame(ica.fit_transform(X_t),index=X_t.index)
-    A = pd.DataFrame(ica.mixing_,index=X_t.columns)
+    S = pd.DataFrame(ica.fit_transform(X_t),index=X.columns)
+    A = pd.DataFrame(ica.mixing_,index=X.index)
     #save S&A 
-    S.to_csv(F"results/8_ICA/{Genome}_S.tsv", sep = '\t')
-    A.to_csv(F"results/8_ICA/{Genome}_A.tsv", sep = '\t')
+    S.to_csv(F"results/8_ICA/AllICA_S.tsv", sep = '\t')
+    A.to_csv(F"results/8_ICA/AllICA_A.tsv", sep = '\t')
 
     
 

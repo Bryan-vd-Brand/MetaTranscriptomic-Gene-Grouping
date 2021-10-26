@@ -27,9 +27,16 @@ def determineGenomes(pileup_files):
     for file in pileup_files:
         result = []
         sample = os.path.basename(file).split(".")[0].split('_')[1]
-        flagFile = F"results/4_ReferenceSelection/per_sample/{sample}/{sample}.flagstat"
-        flagStatTable = pd.read_table(flagFile, sep='\t', header = None)
-        numOfUniquelyMappedReads = flagStatTable[0][4]
+        AlignFile = F"results/4_ReferenceSelection/per_sample/{sample}/{sample}_Alignments.tsv"
+        if not os.path.exists(AlignFile):
+            print(F"Missing {AlignFile}")
+            continue #Does not exist if no mapped reads     
+        Alignments = pd.read_table(AlignFile, sep='\t', header = None)
+        numOfUniquelyMappedReads = Alignments[1][0]
+        
+        
+        if numOfUniquelyMappedReads < 1000: 
+            continue #Skip this file, if there are less then 1000 unique alignments to have based weighting on
         
         pileupTable = pd.read_table(file, sep='\t', header = 0)
         #Take the genomes having atleast 50% Covered_percent for this sample ; hcov Format = 0.3406

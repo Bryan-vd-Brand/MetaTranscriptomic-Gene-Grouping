@@ -23,10 +23,12 @@ sortmerna_db_files:
   silva-bac-16s-id90.fasta: silva-bac-16s-id90.fasta
   silva-bac-23s-id98.fasta: silva-bac-23s-id98.fasta
 
-#path to file containing Gene demarkations in SAF format  
+#path to file containing Gene demarkations with special Gene naming  
 gene_annotation_file:
   resources/genes/seperatedCrAssPhageGeneAnnotation.table
-
+#path to file containing gene demarkations in SAF format
+saf_gene_annotation_file:
+  resources/genes/LongCrAssPhageGeneAnnotation.table
 #path to file containing additional annotations to be added to the gene modules
 additional_annotation_file:
   resources/genes/YutinGeneAnnotation.table

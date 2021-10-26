@@ -6,6 +6,7 @@ import numpy as np
 import glob
 import os.path
 from scipy import stats
+from collections import Counter
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -43,7 +44,7 @@ def parse_args():
 
 
 def OneICA(PCA_Variance, exprDFs, Additional_Annotation_File):
-    resultDF = pd.DataFrame(columns=["Genome","Component","GeneID","Annotation"])
+    resultDF = pd.DataFrame(columns=["Genome","Component","GeneID","Annotation","K2","p"])
     for exprDF in exprDFs:
         Genome = exprDF['Genome'].iloc[0]
         #run for each genome seperately, avoiding finding gene presence/notpresence patterns
@@ -84,7 +85,7 @@ def OneICA(PCA_Variance, exprDFs, Additional_Annotation_File):
                 Start = AnnotationRow["Start"].to_string(index=False)
                 End = AnnotationRow["End"].to_string(index=False)
                 Strand = AnnotationRow["Strand"].to_string(index=False)
-                dataDict = {'Genome':[Genome],'Component':[component],'GeneID':[GeneID],'Start':[Start],'End':[End],'Strand':[Strand],'Annotation':[Annotation]}
+                dataDict = {'Genome':[Genome],'Component':[component],'GeneID':[GeneID],'Start':[Start],'End':[End],'Strand':[Strand],'Annotation':[Annotation],'K2':[K2],'p':[p]}
                 toAppendDF = pd.DataFrame(data=dataDict)
                 resultDF = resultDF.append(toAppendDF, ignore_index = True)
                 
@@ -119,20 +120,21 @@ def main():
                 #Have gene modules for the file/genome. Need to store this combination for each genome seperately and count their occurence
                 Genome = geneModules.iloc[0]['Genome']
                 GeneIDs = geneModules["GeneID"].tolist()
-                GeneIDc = ""
-                for gene in GeneIDs:
-                    GeneIDc = GeneIDc + gene + ','
                 thisGenome = geneModuleCountsDF[geneModuleCountsDF["Genome"] == Genome]
-                if GeneIDc in thisGenome["GeneIDs"].values:
-                    #already present +1 count
-                    index = thisGenome.index[thisGenome['GeneIDs'] == GeneIDc].tolist()
-                    geneModuleCountsDF.at[index[0],'Count'] = geneModuleCountsDF.loc[index[0],'Count'] + 1
-                    continue
-                #gene module not present in DF 
-                dataDict = {'Genome':[Genome],'GeneIDs':[GeneIDc],'Count':[1]}
-                toAppendDF = pd.DataFrame(data=dataDict)
-                geneModuleCountsDF = geneModuleCountsDF.append(toAppendDF, ignore_index = True)
-    geneModuleCountsDF.to_csv(F"results/8_ICA/GroupedgeneModule.tsv", sep='\t', index = False)
+                AlreadyPresent = False
+                for row in thisGenome.itertuples():
+                    GeneModule = row.GeneIDs
+                    index = row.Index
+                    if Counter(GeneModule) == Counter(GeneIDs):
+                        #already present
+                        geneModuleCountsDF.at[index,'Count'] = geneModuleCountsDF.loc[index,'Count'] + 1
+                        AlreadyPresent = True
+                #gene module not present in DF
+                if not AlreadyPresent:                
+                    dataDict = {'Genome':[Genome],'GeneIDs':[GeneIDs],'Count':[1]}
+                    toAppendDF = pd.DataFrame(data=dataDict)
+                    geneModuleCountsDF = geneModuleCountsDF.append(toAppendDF, ignore_index = True)
+    geneModuleCountsDF.to_csv(F"results/8_ICA/GroupedGeneModule.tsv", sep='\t', index = False)
         
 
 if __name__ == "__main__":

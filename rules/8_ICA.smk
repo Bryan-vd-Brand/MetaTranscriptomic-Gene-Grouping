@@ -2,6 +2,7 @@
 
 VARIANCE = config['pca_variance_required']
 A_ANNOT = config['additional_annotation_file']
+SAF_ANNOT = config['saf_gene_annotation_file']
 
 def get_samples(wildcards):
     print(config["samples"][wildcards.sample])
@@ -52,17 +53,17 @@ rule many_ICA:
     params:
         script = srcdir("../Scripts/1000_runICA.py")
     output:
-        "results/8_ICA/finished_1000Run_ICA.touch"
+        "results/8_ICA/GroupedGeneModule.tsv"
     shell:
         """
-        python {params.script} -ft {input} -PCAvar {VARIANCE} -gaf {A_ANNOT} ;
-        touch ./results/8_ICA/finished_1000Run_ICA.touch ;
+        python {params.script} -ft {input} -PCAvar {VARIANCE} -gaf {A_ANNOT}
         """
         
 rule visualize_gene_modules:
     input:
         GeneModules = "results/8_ICA/GeneModules.tsv",
-        FC_Table = "FeatureCount_table.tsv"
+        FC_Table = "FeatureCount_table.tsv",
+        GroupedGeneModules = "results/8_ICA/GroupedGeneModule.tsv"
     params:
         script = srcdir("../Scripts/visualize_gene_modules.R")
     output:
@@ -71,6 +72,8 @@ rule visualize_gene_modules:
         """
         Rscript {params.script} \
         {input.FC_Table} \
-        {input.GeneModules} ;
+        {input.GeneModules} \
+        {input.GroupedGeneModules} \
+        {SAF_ANNOT} ;
         touch ./results/8_ICA/visualize_gene_modules.touch ;
         """
