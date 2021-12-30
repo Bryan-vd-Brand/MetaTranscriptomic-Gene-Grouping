@@ -7,7 +7,7 @@ import glob
 import os
 import pandas as pd
 
-ConfigFile = "/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/config/config.yaml"
+ConfigFile = "./config/config.yaml"
 DataFolder = ""
 def main(): 
     with open(F'{ConfigFile}','rt') as configFile:
@@ -15,7 +15,7 @@ def main():
         while("input_dir:" not in line):
             line = configFile.readline()
         DataFolder = configFile.readline().strip()
-    with open("/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/config/temp_config.yaml",'w') as newConfigFile:
+    with open("./config/temp_config.yaml",'w') as newConfigFile:
         with open(F'{ConfigFile}','rt') as configFile:
             line = configFile.readline()
             while("#START" not in line):
@@ -32,7 +32,7 @@ def main():
                 else:
                     print(F"ERROR failed to create config entry for {sampleFolder}")
     os.system(F"rm -f {ConfigFile}")
-    os.rename("/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/config/temp_config.yaml","/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/config/config.yaml")
+    os.rename("./config/temp_config.yaml","./config/config.yaml")
     print(DataFolder)
     print(F"Finished generating new config file out of ^")
 

@@ -58,22 +58,3 @@ rule many_ICA:
         """
         python {params.script} -ft {input} -PCAvar {VARIANCE} -gaf {A_ANNOT}
         """
-        
-rule visualize_gene_modules:
-    input:
-        GeneModules = "results/8_ICA/GeneModules.tsv",
-        FC_Table = "FeatureCount_table.tsv",
-        GroupedGeneModules = "results/8_ICA/GroupedGeneModule.tsv"
-    params:
-        script = srcdir("../Scripts/visualize_gene_modules.R")
-    output:
-        "results/8_ICA/visualize_gene_modules.touch"
-    shell:
-        """
-        Rscript {params.script} \
-        {input.FC_Table} \
-        {input.GeneModules} \
-        {input.GroupedGeneModules} \
-        {SAF_ANNOT} ;
-        touch ./results/8_ICA/visualize_gene_modules.touch ;
-        """

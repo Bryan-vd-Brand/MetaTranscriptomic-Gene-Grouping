@@ -7,6 +7,8 @@ if (length(args)==0) {
   stop("No Arguments Supplied", call.=FALSE)
 }
 
+options(warn = 1)
+
 FeatureCountTSV <- args[1]
 GeneModulesTSV <- args[2]
 GroupedGeneModuleTSV <- args[3]
@@ -40,24 +42,18 @@ FileName <- paste(gDF$Genome[1], "GeneModulesExpressionHeatMap.png", sep="_")
 ggsave(FileName,width=180,height=100,units="cm",limitsize = FALSE)
 }
 
-#TODO: group the gene module entries by genome and redo the componentID values to have a new set for each genome (simplifying the coloring)
+
 #Use gggenes to visualize the grouped gene modules for all gene modules with count > 1
 AllGeneModuleTable <- read.table(file = GroupedGeneModuleTSV, sep = '\t', header = TRUE)
 GroupedGeneModuleTable <- AllGeneModuleTable %>% group_by(AllGeneModuleTable$Genome) %>% group_split()
 GeneAnnotationTable <- read.table(file= GeneAnnotationTSV, sep = '\t', header = TRUE)
-LongVisualizeableGenesTable <- data.frame(Genome = character(), GeneID = character(), Start = numeric(), End = numeric(), Strand = numeric(), ComponentID = numeric())
+LongVisualizeableGenesTable <- data.frame(Genome = character(), GeneID = character(), Start = numeric(), End = numeric(), Strand = numeric(), P = numeric())
 #First take the grouped gene modules from the table, combine them with annotation information in long format
 for (GeneModuleTable in GroupedGeneModuleTable){
- ComponentID <- 0
  for (row in 1:nrow(GeneModuleTable)){
   Genome <- GeneModuleTable$Genome[row]
-  Count <- GeneModuleTable$Count[row]
-  #If the gene module occurs less then X times of the 1000 runs ignore it
-  if (Count < 500){
-   next
-  }
-  ComponentID <- ComponentID + 1
-  moduleGenes <- unlist(strsplit(substr(GeneModuleTable$GeneIDs[row], 2, nchar(GeneModuleTable$GeneIDs[row])-1), split = ", ")) #remove [] and create list out of the string
+  P <- (GeneModuleTable$Pval[row] / 1000)
+  moduleGenes <- unlist(strsplit(substr(GeneModuleTable$GeneModule[row], 2, nchar(GeneModuleTable$GeneModule[row])-1), split = ", ")) #remove [] and create list out of the string
   GeneAnnotationSubset <- filter(GeneAnnotationTable, Chr == Genome)
   #For each gene look up its start, end and strand and add it to the LongVisualizeableGenesTable
   for (gene in moduleGenes){
@@ -71,7 +67,8 @@ for (GeneModuleTable in GroupedGeneModuleTable){
     } else {
      Strand <- 0
     }
-    newRow <- data.frame(Genome = c(Genome), GeneID = c(gene), Start = c(Start), End = c(End), Strand = c(Strand), ComponentID = c(ComponentID))
+    Annotation <- GeneAnnotation$Annotation[row]
+    newRow <- data.frame(Genome = c(Genome), GeneID = c(gene), Start = c(Start), End = c(End), Strand = c(Strand), P = c(P), Annotation = c(Annotation))
     LongVisualizeableGenesTable <- rbind(LongVisualizeableGenesTable, newRow)
    }
   }
@@ -79,14 +76,15 @@ for (GeneModuleTable in GroupedGeneModuleTable){
 }
  
  #Then ggplot + gggenes
- #Because of the same gene being in several components make a seperate plot for each genome, facet wrap over componentID
+ #Because of the same gene being in several components make a seperate plot for each genome, facet wrap over P
 #GroupedGeneModuleTable <- AllGeneModuleTable %>% group_by(AllGeneModuleTable$Genome) %>% group_split()
 GroupedLVSGT <- LongVisualizeableGenesTable %>% group_by(LongVisualizeableGenesTable$Genome) %>% group_split()
 for (GenomesTable in GroupedLVSGT){
  genome <- GenomesTable$Genome[1]
- genePlot <- ggplot(GenomesTable, aes(xmin = Start, xmax = End, y = Genome, fill = as.factor(ComponentID), forward = Strand)) +
+ genePlot <- ggplot(GenomesTable, aes(xmin = Start, xmax = End, y = Genome, fill = as.factor(P), forward = Strand, label = Annotation)) +
    geom_gene_arrow() +
-   facet_wrap(~ ComponentID, ncol = 1) +
+   geom_gene_label() +
+   facet_wrap(~ P, ncol = 1) +
    scale_fill_brewer(palette = "Paired") +
    theme_genes()
  ggsave(sprintf("500_GeneModules_%s.png",genome),width=100,units="cm", plot = genePlot, limitsize = FALSE)

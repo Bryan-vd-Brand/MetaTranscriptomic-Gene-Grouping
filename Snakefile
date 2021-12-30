@@ -5,10 +5,10 @@ include: "rules/1_readTrimming.smk"
 include: "rules/2_fastqc.smk"
 include: "rules/3_sortmerna.smk"
 include: "rules/4_ReferenceSelection.smk"
-include: "rules/5_SingleReferenceGeneExpression.smk"
 include: "rules/6_GenerateHorizontalCoveragePlot.smk"
 include: "rules/7_FeatureCounts.smk"
 include: "rules/8_ICA.smk"
+include: "rules/9_PermutationStatistics.smk"
 
 # both methods return the same information. Notice how for the paired end samples,
 # there is only one string containing the two files. Because of that we have to
@@ -39,4 +39,5 @@ rule all:
         "results/7_FeatureCounts/finished_plotgeneration.touch",
         "results/8_ICA/generate_distribution_graph.touch",
         "results/8_ICA/finished_ICA.touch",
-        "results/8_ICA/visualize_gene_modules.touch"
+        "results/9_PermutationStatistics/visualize_gene_modules.touch",
+        "results/9_PermutationStatistics/visualize_ICA_P.touch"

@@ -42,7 +42,7 @@ rule STAR_align_single:
         "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
-        STAR --runThreadN 4 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.fq} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
+        STAR --runThreadN 12 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.fq} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
         samtools view -O BAM -b {wildcards.sample}Aligned.out.sam > {wildcards.sample}.bam ;
         samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
@@ -72,7 +72,7 @@ rule STAR_align_paired:
         "results/4_ReferenceSelection/per_sample/{sample}/pileup_{sample}.txt"
     shell:
         """
-        STAR --runThreadN 4 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.r1} {input.r2} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
+        STAR --runThreadN 12 --alignIntronMax 1 --genomeDir {GENOMES_DIR} --readFilesIn {input.r1} {input.r2} --readFilesCommand gunzip -c --outFileNamePrefix {wildcards.sample} ;
         samtools view -O BAM -b {wildcards.sample}Aligned.out.sam > {wildcards.sample}.bam ;
         samtools sort {wildcards.sample}.bam > sorted_{wildcards.sample}.bam ;
         samtools view -b -F 4 sorted_{wildcards.sample}.bam > {wildcards.sample}_mapped.bam ;
