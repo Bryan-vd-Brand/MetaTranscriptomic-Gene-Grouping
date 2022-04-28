@@ -1,0 +1,34 @@
+[process:1372] === Options processing starts ... ===
+Found value: sortmerna
+Found flag: --ref
+Found value: resources/sortmerna_db/silva-euk-18s-id95.fasta of previous flag: --ref
+Found flag: --index
+Found value: 1 of previous flag: --index
+Found flag: --idx-dir
+Found value: resources/sortmerna_db of previous flag: --idx-dir
+Missing required flag: reads
+[process:1456] Processing option: idx-dir with value: resources/sortmerna_db
+[opt_idxdir:1014] Using IDX dir: ["/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/resources/sortmerna_db" as specified
+[process:1456] Processing option: index with value: 1
+[opt_index:1157] using 'index' with specified value 1
+[process:1456] Processing option: ref with value: resources/sortmerna_db/silva-euk-18s-id95.fasta
+[opt_ref:157] Processing reference [1] out of total [1] references
+[opt_ref:205] File "/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/resources/sortmerna_db/silva-euk-18s-id95.fasta" exists and is readable
+[process:1476] === Options processing done ===
+[process:1477] Alignment type: [best:1 num_alignments:1 min_lis:2 seeds:2]
+[validate_kvdbdir:1217] 'workdir' option was not provided. Using USERDIR to set the working directory: ""
+[validate_kvdbdir:1223] Key-value DB location "/home/bryan/sortmerna/run/kvdb"
+[validate_idxdir:1189] Using index directory: "/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/resources/sortmerna_db"
+[validate_idxdir:1205] IDX directory: "/home/bryan/Documents/Git/MetaTranscriptomic-Gene-Grouping/resources/sortmerna_db" exists and is not empty
+[validate_readb_dir:1281] Using split reads directory : "/home/bryan/sortmerna/run/readb"
+[validate_readb_dir:1294] split reads directory : "/home/bryan/sortmerna/run/readb" exists and is empty
+[validate:1504] No output format has been chosen (fastx|sam|blast|otu_map). Using default 'blast'
+[main:62] Running command:
+sortmerna --ref resources/sortmerna_db/silva-euk-18s-id95.fasta --index 1 --idx-dir resources/sortmerna_db 
+[build_index:1127] ==== Index building started ====
+[build_index:1190] Begin indexing file resources/sortmerna_db/silva-euk-18s-id95.fasta of size: 13259584 under index name resources/sortmerna_db/2700646386527218729
+  done.
+
+[build_index:2108] ==== Done index building in 32.1868 sec ====
+
+[main:72] Only performed indexing as 'index' = 1 was specified

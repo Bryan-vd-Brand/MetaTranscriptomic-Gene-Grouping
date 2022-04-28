@@ -1,10 +1,7 @@
 #data storage
-Data/
-resources/
 .snakemake/
 #results
 results/
-Output/
 #nfs
 .nfs*
 fastp*
@@ -13,8 +10,6 @@ fastp*
 *.out.sam
 *.out.tab
 *_STARtmp/
-*.png
-*.tsv
 *.bam
 *.bam.bai
-
+*.png
